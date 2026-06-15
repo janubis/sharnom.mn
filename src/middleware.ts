@@ -1,0 +1,20 @@
+/**
+ * Edge middleware: route protection (RBAC) + light i18n passthrough.
+ * Uses the edge-safe auth config (no DB / Node deps).
+ */
+import NextAuth from "next-auth";
+
+import { authConfig } from "@/lib/auth.config";
+
+export const { auth: middleware } = NextAuth(authConfig);
+
+export const config = {
+  // Protect app routes; skip static assets, images, and auth/api internals.
+  matcher: [
+    "/admin/:path*",
+    "/owner/:path*",
+    "/profile/:path*",
+    "/saved/:path*",
+    "/settings/:path*",
+  ],
+};

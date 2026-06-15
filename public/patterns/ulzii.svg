@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="16" viewBox="0 0 64 16" fill="none">
+  <!-- өлзий / meander key motif, tileable horizontally -->
+  <g stroke="#1366c2" stroke-width="1.6" fill="none" stroke-linecap="square">
+    <path d="M0 8 H6 V2 H14 V14 H22 V2 H30 V8 H32" />
+    <path d="M32 8 H38 V2 H46 V14 H54 V2 H62 V8 H64" />
+  </g>
+</svg>

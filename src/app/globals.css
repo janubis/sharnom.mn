@@ -1,0 +1,164 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Mongol Local — design tokens.
+ * HSL channels (no hsl() wrapper) so Tailwind can compose with opacity.
+ *
+ *   khadag хөх  → primary (sky blue, trust)
+ *   gobi элс    → secondary (warm gold / sand)
+ *   cream       → background
+ *   charcoal    → foreground
+ *   soyombo улаан → accent red (sparingly)
+ */
+@layer base {
+  :root {
+    --background: 40 38% 97%; /* warm cream */
+    --foreground: 24 14% 14%; /* deep warm charcoal */
+
+    --card: 0 0% 100%;
+    --card-foreground: 24 14% 14%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 24 14% 14%;
+
+    --primary: 210 90% 44%; /* khadag хөх */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 36 64% 52%; /* gobi warm gold */
+    --secondary-foreground: 28 40% 16%;
+
+    --muted: 36 24% 94%;
+    --muted-foreground: 28 8% 42%;
+
+    --accent: 36 70% 94%; /* soft sand tint for hover surfaces */
+    --accent-foreground: 28 40% 16%;
+
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 32 18% 88%;
+    --input: 32 18% 88%;
+    --ring: 210 90% 44%;
+
+    /* Brand-specific aliases */
+    --khadag: 210 90% 44%;
+    --gobi: 36 64% 52%;
+    --gobi-foreground: 28 40% 16%;
+    --soyombo: 2 74% 50%; /* Mongolian red */
+    --success: 148 52% 38%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 28 40% 16%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 24 14% 9%;
+    --foreground: 40 30% 94%;
+
+    --card: 24 12% 12%;
+    --card-foreground: 40 30% 94%;
+
+    --popover: 24 12% 12%;
+    --popover-foreground: 40 30% 94%;
+
+    --primary: 205 88% 56%;
+    --primary-foreground: 24 30% 8%;
+
+    --secondary: 36 56% 56%;
+    --secondary-foreground: 24 30% 8%;
+
+    --muted: 24 8% 18%;
+    --muted-foreground: 36 10% 64%;
+
+    --accent: 24 8% 20%;
+    --accent-foreground: 40 30% 94%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 24 8% 22%;
+    --input: 24 8% 22%;
+    --ring: 205 88% 56%;
+
+    --khadag: 205 88% 56%;
+    --gobi: 36 56% 56%;
+    --gobi-foreground: 24 30% 8%;
+    --soyombo: 2 70% 56%;
+    --success: 148 46% 46%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 88% 56%;
+    --warning-foreground: 24 30% 8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    text-rendering: optimizeLegibility;
+  }
+  /* Mongolian Cyrillic reads better with a touch more line-height */
+  p, li {
+    line-height: 1.65;
+  }
+  ::selection {
+    background: hsl(var(--khadag) / 0.2);
+  }
+}
+
+@layer components {
+  /* Subtle өлзий хээ motif strip — used in headers / separators. */
+  .ulzii-rule {
+    height: 8px;
+    background-image: var(--tw-bg-ulzii, url("/patterns/ulzii.svg"));
+    background-repeat: repeat-x;
+    background-size: auto 8px;
+    opacity: 0.35;
+  }
+
+  /* Felt / ger texture wash for hero & empty states. */
+  .felt-surface {
+    background-color: hsl(var(--background));
+    background-image: url("/patterns/uulen.svg");
+    background-size: 320px;
+    background-repeat: repeat;
+  }
+
+  /* Loading shimmer for skeletons. */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      hsl(0 0% 100% / 0.45),
+      transparent
+    );
+    animation: shimmer 1.6s infinite;
+  }
+}
+
+/* MapLibre GL overrides to match the brand */
+.maplibregl-popup-content {
+  border-radius: var(--radius);
+  padding: 0;
+  box-shadow: 0 8px 40px rgba(28, 25, 23, 0.18);
+  overflow: hidden;
+}
+.maplibregl-ctrl-group {
+  border-radius: var(--radius) !important;
+  overflow: hidden;
+}

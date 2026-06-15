@@ -1,0 +1,135 @@
+# ──────────────────────────────────────────────────────────────────────────
+# Mongol Local — local development services.
+#   docker compose up -d
+#
+# Services: PostgreSQL+PostGIS, Redis, OpenSearch (+Dashboards), ClickHouse,
+#           MinIO (S3), and a tileserver-gl for self-hosted vector tiles.
+# ──────────────────────────────────────────────────────────────────────────
+name: mongol-local
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: ml_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mongol
+      POSTGRES_PASSWORD: mongol
+      POSTGRES_DB: mongol_local
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mongol -d mongol_local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: ml_redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  opensearch:
+    image: opensearchproject/opensearch:2.18.0
+    container_name: ml_opensearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_SECURITY_PLUGIN=true" # dev only — enable security in prod
+      - "DISABLE_INSTALL_DEMO_CONFIG=true"
+    ulimits:
+      memlock: { soft: -1, hard: -1 }
+      nofile: { soft: 65536, hard: 65536 }
+    ports:
+      - "9200:9200"
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.18.0
+    container_name: ml_opensearch_dashboards
+    restart: unless-stopped
+    environment:
+      - 'OPENSEARCH_HOSTS=["http://opensearch:9200"]'
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
+    ports:
+      - "5601:5601"
+    depends_on:
+      - opensearch
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8-alpine
+    container_name: ml_clickhouse
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_DB: mongol_local_analytics
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ""
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    ports:
+      - "8123:8123" # HTTP
+      - "9000:9000" # native (note: conflicts with MinIO if both on 9000 — MinIO uses 9000 below; remap if needed)
+    ulimits:
+      nofile: { soft: 262144, hard: 262144 }
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./docker/clickhouse/init:/docker-entrypoint-initdb.d:ro
+
+  minio:
+    image: minio/minio:latest
+    container_name: ml_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9100:9000" # S3 API (host 9100 to avoid ClickHouse native 9000 clash)
+      - "9001:9001" # MinIO console
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # Self-hosted OpenMapTiles vector tiles. Drop an .mbtiles into ./docker/tiles.
+  # See README "Map tiles" for generating UB/Mongolia extracts.
+  tileserver:
+    image: maptiler/tileserver-gl:latest
+    container_name: ml_tileserver
+    restart: unless-stopped
+    command: ["--port", "8080"]
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./docker/tiles:/data
+    profiles: ["maps"] # opt-in: `docker compose --profile maps up -d`
+
+volumes:
+  pg_data:
+  redis_data:
+  opensearch_data:
+  clickhouse_data:
+  minio_data:

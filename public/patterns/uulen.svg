@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120" fill="none">
+  <!-- үүлэн хээ — repeating cloud-scroll texture, very faint felt wash -->
+  <g stroke="#1c1917" stroke-opacity="0.05" stroke-width="2" fill="none">
+    <path d="M10 30c0-8 12-8 12 0s12 8 12 0" />
+    <path d="M70 30c0-8 12-8 12 0s12 8 12 0" />
+    <path d="M40 70c0-8 12-8 12 0s12 8 12 0" />
+    <path d="M100 70c0-8 12-8 12 0s12 8 12 0" />
+    <path d="M10 100c0-8 12-8 12 0s12 8 12 0" />
+    <path d="M70 100c0-8 12-8 12 0s12 8 12 0" />
+    <circle cx="34" cy="48" r="2.2" />
+    <circle cx="94" cy="48" r="2.2" />
+    <circle cx="4" cy="88" r="2.2" />
+    <circle cx="64" cy="88" r="2.2" />
+  </g>
+</svg>
