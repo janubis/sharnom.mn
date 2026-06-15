@@ -9,8 +9,16 @@ const nextConfig = {
   // Pin file-tracing to this project (a stray lockfile in the home dir can
   // otherwise make Next infer the wrong workspace root).
   outputFileTracingRoot: import.meta.dirname,
-  // Server Components external packages (native / heavy deps kept out of the bundle)
-  serverExternalPackages: ["postgres", "@opensearch-project/opensearch", "@clickhouse/client", "ioredis"],
+  // Server Components external packages (native / heavy deps kept out of the bundle).
+  // `nodemailer` (pulled in by the Auth.js Nodemailer provider) must be external —
+  // it does `require('fs')`, which webpack can't resolve when bundled.
+  serverExternalPackages: [
+    "postgres",
+    "@opensearch-project/opensearch",
+    "@clickhouse/client",
+    "ioredis",
+    "nodemailer",
+  ],
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
