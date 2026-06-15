@@ -83,8 +83,21 @@ simple and scales without rewrites:
 5. **Ports.** MinIO's S3 API is on host **9100** (ClickHouse native uses 9000); MinIO
    console is 9001. See `docker-compose.yml`.
 6. **`next build` needs a database.** Pages that read the DB are prerendered at build;
-   without a running Postgres the build's page-data step fails. That's environmental,
-   not a code defect — bring services up first.
+   without a running Postgres the build's page-data step fails (`ECONNREFUSED`). That's
+   environmental, not a code defect — bring services up first.
+7. **Client/server import boundary.** A `"use client"` component must NEVER import a
+   server-only module, or its whole dependency chain gets bundled for the browser and
+   breaks (`Can't resolve 'fs'`). Concretely:
+   - role checks → import from **`@/lib/roles`** (pure), NOT `@/lib/rbac` (server-only,
+     pulls Auth.js → nodemailer → `fs`).
+   - upload constants → import from **`@/lib/upload`** (pure), NOT `@/lib/storage/s3`
+     (server-only, pulls the AWS SDK).
+   - `@/lib/auth`, `@/db`, `@/db/queries/*`, `@/lib/search`, `@/lib/analytics/track`,
+     `@/lib/api` are all server-only — client code may import their **types** only
+     (`import type`, erased at build).
+   `serverExternalPackages` in `next.config.mjs` only fixes Node-server bundling
+   (nodemailer is listed there); it does NOT help client/edge leaks — fix those by
+   not importing server modules from client code.
 
 ---
 

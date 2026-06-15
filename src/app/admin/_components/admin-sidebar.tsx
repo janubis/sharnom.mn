@@ -6,7 +6,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
-import { hasRole } from "@/lib/rbac";
+import { hasRole } from "@/lib/roles";
 import type { UserRole } from "@/db/schema";
 import { APP_NAME } from "@/lib/constants";
 import { ADMIN_NAV } from "./admin-nav";

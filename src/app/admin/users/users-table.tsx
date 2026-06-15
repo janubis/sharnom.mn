@@ -6,7 +6,7 @@ import { MoreHorizontal, Ban, ShieldX, Undo2, Clock } from "lucide-react";
 
 import type { AdminUserRow } from "@/db/queries/users";
 import type { UserRole } from "@/db/schema";
-import { isAdmin } from "@/lib/rbac";
+import { isAdmin } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";

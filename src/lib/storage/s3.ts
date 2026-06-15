@@ -9,6 +9,10 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import { env } from "@/lib/env";
 
+// Pure upload constraints live in a client-safe module; re-export for callers
+// that already import them from here (e.g. the photos API route).
+export { ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES, validateImageUpload } from "@/lib/upload";
+
 let _client: S3Client | null = null;
 function client(): S3Client {
   if (!_client) {
@@ -23,25 +27,6 @@ function client(): S3Client {
     });
   }
   return _client;
-}
-
-export const ALLOWED_IMAGE_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/avif",
-] as const;
-
-export const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8 MB
-
-export function validateImageUpload(contentType: string, size: number): string | null {
-  if (!ALLOWED_IMAGE_TYPES.includes(contentType as (typeof ALLOWED_IMAGE_TYPES)[number])) {
-    return "Зөвхөн JPG, PNG, WEBP, AVIF зураг оруулах боломжтой.";
-  }
-  if (size > MAX_IMAGE_BYTES) {
-    return "Зургийн хэмжээ 8MB-аас бага байх ёстой.";
-  }
-  return null;
 }
 
 /** Build a deterministic, namespaced object key. */

@@ -1,26 +1,18 @@
 /**
- * Role-based access control helpers.
+ * Server-only role-based access control guards.
  * Used by API route handlers and server actions to gate privileged actions.
+ *
+ * Importing this module pulls in Auth.js (→ nodemailer → `fs`), so it is marked
+ * server-only. Client components must import the PURE helpers from `@/lib/roles`.
  */
+import "server-only";
+
 import { getCurrentUser } from "@/lib/auth";
 import type { UserRole } from "@/db/schema";
 
-const RANK: Record<UserRole, number> = {
-  USER: 0,
-  OWNER: 1,
-  MODERATOR: 2,
-  ADMIN: 3,
-  SUPER_ADMIN: 4,
-};
-
-export function hasRole(role: UserRole | undefined, min: UserRole): boolean {
-  if (!role) return false;
-  return RANK[role] >= RANK[min];
-}
-
-export const isModerator = (r?: UserRole) => hasRole(r, "MODERATOR");
-export const isAdmin = (r?: UserRole) => hasRole(r, "ADMIN");
-export const isOwnerRole = (r?: UserRole) => hasRole(r, "OWNER");
+// Re-export the pure, client-safe helpers so existing server imports keep working.
+export { ROLE_RANK, hasRole, isModerator, isAdmin, isOwnerRole } from "@/lib/roles";
+import { hasRole } from "@/lib/roles";
 
 /** Thrown by guards; API handlers map this to a 401/403 response. */
 export class AuthError extends Error {

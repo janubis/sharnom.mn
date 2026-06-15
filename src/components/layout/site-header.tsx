@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { hasRole } from "@/lib/rbac";
+import { hasRole } from "@/lib/roles";
 import { APP_NAME } from "@/lib/constants";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {

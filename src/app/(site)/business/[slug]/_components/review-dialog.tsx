@@ -20,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { StarRatingInput } from "@/components/business/rating-stars";
 import { useToast } from "@/hooks/use-toast";
-import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES } from "@/lib/storage/s3";
+import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES } from "@/lib/upload";
 
 const MAX_PHOTOS = 8;
 const MIN_BODY = 10;

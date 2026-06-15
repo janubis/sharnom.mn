@@ -16,7 +16,7 @@ import {
 
 import type { AdminBusinessRow, DuplicateCandidate } from "@/db/queries/businesses";
 import type { UserRole } from "@/db/schema";
-import { isAdmin } from "@/lib/rbac";
+import { isAdmin } from "@/lib/roles";
 import { formatRating, formatDistance } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
