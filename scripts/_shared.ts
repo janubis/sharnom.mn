@@ -6,11 +6,8 @@
  * They use the same Drizzle client as the app via the `@/` path alias
  * (tsconfig `paths` apply to tsx).
  */
-import { config } from "dotenv";
-
-// Load .env.local (then fall back to .env) before anything touches `env`.
-config({ path: ".env.local" });
-config();
+// MUST be first: loads .env.local before `@/db` reads DATABASE_URL at import time.
+import "./_env";
 
 import { sql } from "drizzle-orm";
 

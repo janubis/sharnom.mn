@@ -75,6 +75,11 @@ simple and scales without rewrites:
    under plain `tsx`. `npm run reindex` preloads `scripts/_register-server-only.mjs`
    (a Node loader hook stubbing it). `seed`/`import`/`dedupe` are written to avoid
    server-only modules entirely, so they need no shim.
+   - **Env load order:** scripts must read `.env.local` *before* `@/db` is evaluated,
+     and ESM hoists imports above body code — so the dotenv call lives in a
+     dependency-free module `scripts/_env.ts` that is the **first** import of
+     `scripts/_shared.ts` (before `@/db`). Don't move it, or scripts fall back to the
+     default `mongol:mongol` DSN and fail auth.
 3. **Typecheck command.** If `node_modules/.bin/tsc` is missing, run
    `node node_modules/typescript/bin/tsc --noEmit`. Lint:
    `node node_modules/next/dist/bin/next lint`.
