@@ -24,7 +24,7 @@ unegui.mn), not as a throwaway MVP.
 
 | Layer | Choice | Why |
 | --- | --- | --- |
-| Framework | Next.js 15 App Router + TS | One framework for SSR/ISR front **and** API; great SEO |
+| Framework | Next.js 16 App Router + TS | One framework for SSR/ISR front **and** API; great SEO. Bundler: Turbopack (Next 16 default) |
 | DB | PostgreSQL 16 + **PostGIS** | Relational source of truth + first-class geo (near-me, map bounds) |
 | ORM | **Drizzle** | Type-safe, but lets us hand-write PostGIS generated columns + raw geo SQL cleanly (Prisma fights this) |
 | Auth | Auth.js v5 | OAuth (Google/Facebook/Apple) + email; JWT sessions → **edge-safe RBAC middleware** |
@@ -103,6 +103,20 @@ simple and scales without rewrites:
    `serverExternalPackages` in `next.config.mjs` only fixes Node-server bundling
    (nodemailer is listed there); it does NOT help client/edge leaks — fix those by
    not importing server modules from client code.
+8. **Drizzle relational queries need both sides.** `db.query.X.findMany({ with: { y } })`
+   requires the relation declared on BOTH tables — a `many(y)` on X *and* an inverse
+   `one(X)` (with fields/references) on Y. Missing the inverse throws at runtime:
+   "There is not enough information to infer relation 'X.y'". All inverse relations
+   live in `src/db/schema.ts`.
+9. **Next.js 16 specifics.** (a) `middleware.ts` must export a **function** (default or
+   named `middleware`) — a destructured `const` isn't recognized; we do `const { auth }
+   = NextAuth(authConfig); export default auth`. (b) Routes reading `request.url` must
+   be `export const dynamic = "force-dynamic"`. (c) **`next-intl` must be v4** (v3 can't
+   find its config under Turbopack). (d) **`next-auth` v5-beta** declares a peer range of
+   Next ≤15 but works on 16 — `.npmrc` sets `legacy-peer-deps=true` so installs resolve.
+   (e) `next lint` was removed; lint via the ESLint CLI.
+
+**Toolchain:** Node.js **24.16.0 LTS**, npm 11, Next **16.2.9**, next-intl **4.x**.
 
 ---
 

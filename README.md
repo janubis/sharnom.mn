@@ -61,7 +61,7 @@ indexes, bounds-based map loading, and a search/analytics layer that scales to O
 
 | Layer | Choice |
 | --- | --- |
-| Framework | **Next.js 15** (App Router) + TypeScript |
+| Framework | **Next.js 16** (App Router, Turbopack) + TypeScript |
 | UI | Tailwind CSS v3 + shadcn/ui (Radix) + lucide-react |
 | i18n | next-intl (Mongolian default, English ready) |
 | Database | **PostgreSQL 16 + PostGIS** via **Drizzle ORM** |
@@ -140,8 +140,10 @@ docker/                    # Postgres/ClickHouse init SQL, tiles mount
 
 ## 5. Prerequisites
 
-- **Node.js ≥ 20** (tested on 22)
-- **Docker** + Docker Compose (for local services)
+- **Node.js ≥ 20.9** (tested on 24 LTS)
+- **Docker** + Docker Compose (for local services) — or a native PostgreSQL+PostGIS install
+- `npm install` uses `legacy-peer-deps` (set in `.npmrc`) because `next-auth` v5-beta's
+  peer range predates Next 16
 - npm (examples use npm; pnpm/yarn work too)
 
 ---
