@@ -16,7 +16,8 @@ import { db } from "@/db";
 import { env } from "@/lib/env";
 import { autocompleteOs } from "@/lib/search/opensearch";
 
-export const revalidate = 30;
+// Reads request.url for the query, so it must render dynamically.
+export const dynamic = "force-dynamic";
 
 type Suggestion = { slug: string; name: string };
 
