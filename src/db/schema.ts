@@ -689,6 +689,69 @@ export const reviewsRelations = relations(reviews, ({ one, many }) => ({
   votes: many(reviewVotes),
 }));
 
+// Inverse `one()` relations — required by the relational query API so Drizzle
+// can infer joins (e.g. db.query.reviews.findMany({ with: { photos: true } })).
+export const businessContactsRelations = relations(businessContacts, ({ one }) => ({
+  business: one(businesses, {
+    fields: [businessContacts.businessId],
+    references: [businesses.id],
+  }),
+}));
+
+export const businessHoursRelations = relations(businessHours, ({ one }) => ({
+  business: one(businesses, {
+    fields: [businessHours.businessId],
+    references: [businesses.id],
+  }),
+}));
+
+export const businessPhotosRelations = relations(businessPhotos, ({ one }) => ({
+  business: one(businesses, {
+    fields: [businessPhotos.businessId],
+    references: [businesses.id],
+  }),
+  uploadedBy: one(users, {
+    fields: [businessPhotos.uploadedByUserId],
+    references: [users.id],
+  }),
+}));
+
+export const reviewPhotosRelations = relations(reviewPhotos, ({ one }) => ({
+  review: one(reviews, {
+    fields: [reviewPhotos.reviewId],
+    references: [reviews.id],
+  }),
+  business: one(businesses, {
+    fields: [reviewPhotos.businessId],
+    references: [businesses.id],
+  }),
+  user: one(users, { fields: [reviewPhotos.userId], references: [users.id] }),
+}));
+
+export const reviewVotesRelations = relations(reviewVotes, ({ one }) => ({
+  review: one(reviews, {
+    fields: [reviewVotes.reviewId],
+    references: [reviews.id],
+  }),
+  user: one(users, { fields: [reviewVotes.userId], references: [users.id] }),
+}));
+
+export const savedBusinessesRelations = relations(savedBusinesses, ({ one }) => ({
+  user: one(users, { fields: [savedBusinesses.userId], references: [users.id] }),
+  business: one(businesses, {
+    fields: [savedBusinesses.businessId],
+    references: [businesses.id],
+  }),
+}));
+
+export const businessClaimsRelations = relations(businessClaims, ({ one }) => ({
+  business: one(businesses, {
+    fields: [businessClaims.businessId],
+    references: [businesses.id],
+  }),
+  user: one(users, { fields: [businessClaims.userId], references: [users.id] }),
+}));
+
 /* ─────────────────────────── Inferred types ──────────────────────────────── */
 
 export type User = typeof users.$inferSelect;
