@@ -34,14 +34,14 @@ https://github.com/janubis/sharnom.mn (branch `main`).
 next-intl **4.x** · React 19 · TypeScript 5.7.
 
 **Database — PostgreSQL + PostGIS:**
-- *Local (current default):* native **PostgreSQL 18.4** at `C:\Program Files\PostgreSQL\18`,
-  superuser `postgres` / password `root`, DB `mongol_local`, port 5432. Extensions:
-  `postgis` 3.6.2, `pg_trgm`, `unaccent`. Schema migrated + seeded (36 businesses,
-  45 categories, 97 reviews). psql: `C:\Program Files\PostgreSQL\18\bin\psql.exe` with
-  `$env:PGPASSWORD="root"`.
-- *Supabase (target host — see below):* migration pending an IPv4 **Session-pooler**
-  connection string (this network has no IPv6; the direct `db.<ref>.supabase.co` host is
-  IPv6-only and unreachable here).
+- *Supabase — **ACTIVE** (`DATABASE_URL` points here):* PostgreSQL 17.6 via the IPv4
+  **Session pooler** `aws-1-ap-south-1.pooler.supabase.com:5432` (user
+  `postgres.ptqjmvydciialkqdhwbj`, db `postgres`, `?sslmode=require`). Extensions
+  `postgis` / `pg_trgm` / `unaccent` enabled in `public`. Schema migrated + seeded
+  (36 businesses, 45 categories, 101 reviews). App verified end-to-end against it.
+- *Local (fallback):* native **PostgreSQL 18.4** (`postgres`/`root` @ localhost:5432, db
+  `mongol_local`). Swap `LOCAL_DATABASE_URL` into `DATABASE_URL` for offline dev. psql:
+  `C:\Program Files\PostgreSQL\18\bin\psql.exe`.
 
 **Services:** Redis / OpenSearch / ClickHouse / MinIO are optional and currently
 absent — the app degrades gracefully (cache + rate-limit fail open;
@@ -58,13 +58,13 @@ every variable.
 - Publishable (anon) key: `sb_publishable_OWsQjoRC4l9hz4Bxzv8xwA_s0gXPIGU` (client-safe to expose).
 - **DB password is in `.env.local`**, not here.
 - Direct host `db.ptqjmvydciialkqdhwbj.supabase.co:5432` is **IPv6-only** → unusable on
-  IPv4 networks. For migrations/seed/app use the **Session pooler** (Supabase dashboard →
-  Connect → Session pooler): host `aws-0-<region>.pooler.supabase.com`, user
-  `postgres.ptqjmvydciialkqdhwbj`, port `5432`.
-- **Migrate to Supabase:** enable `postgis`, `pg_trgm`, `unaccent` on the Supabase DB
-  (dashboard → Database → Extensions, or `create extension`), set `DATABASE_URL` to the
-  pooler string in `.env.local`, then `npm run db:push && npm run db:seed`. Auth.js + S3
-  storage stay as-is unless we decide to adopt Supabase Auth/Storage later.
+  IPv4 networks. We use the **Session pooler** (IPv4):
+  `postgresql://postgres.ptqjmvydciialkqdhwbj:<pwd>@aws-1-ap-south-1.pooler.supabase.com:5432/postgres?sslmode=require`
+  (region **ap-south-1**). Migration + seed + app all run through it.
+- **Done:** extensions enabled in `public`, schema migrated (`npm run db:migrate`), seeded
+  (`npm run db:seed`). Auth.js + S3 storage stay as-is (not using Supabase Auth/Storage).
+- Pooler is **session mode** (port 5432) so migrations + prepared-statement-free postgres-js
+  (`prepare:false` in `src/db/index.ts`) work. `sslmode=require` is mandatory.
 
 ## Run locally
 
@@ -179,6 +179,10 @@ simple and scales without rewrites:
     `npm approve-scripts`). Without it, a clean clone breaks `next/image` (sharp) and `tsx`
     (esbuild). If a dep is added later, run `npm approve-scripts --allow-scripts-pending`.
 
+11. **Stale `.next` between `build` and `dev`.** After `next build`, running `next dev`
+    can serve stale 404s for `generateStaticParams` routes (category/district) and some
+    handlers. If routes 404 in dev right after a build, `rm -rf .next` and restart dev.
+
 **Toolchain:** Node.js **24.17.0 LTS**, npm **11.17.0**, Next **16.2.9**, next-intl **4.x**.
 
 ---
@@ -220,7 +224,11 @@ lint. See git history and `README.md` for the full architecture.
   `vercel.json` (inert until accounts connected). Supabase DB migration pending the IPv4
   pooler string.
 
+- **2026-06-16** Migrated the DB to **Supabase Postgres** (ap-south-1 Session pooler,
+  IPv4): enabled extensions, ran `db:migrate` + `db:seed`, switched `DATABASE_URL`, and
+  verified the app end-to-end against Supabase. Auth.js + S3 unchanged.
+
 **Pending / next steps:**
-1. Supabase DB migration — needs the Session-pooler connection string (IPv4).
-2. Add a MapTiler key (`NEXT_PUBLIC_MAP_STYLE_URL`) for production map tiles.
-3. Connect Vercel + Cloudflare + Sentry + GA4 accounts when deploying.
+1. Add a MapTiler key (`NEXT_PUBLIC_MAP_STYLE_URL`) for production map tiles.
+2. Connect Vercel + Cloudflare + Sentry + GA4 accounts when deploying (config already wired).
+3. (Optional) consider Supabase Storage for photos + Supabase Auth later.
