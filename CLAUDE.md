@@ -18,6 +18,63 @@ and claim their business. Owners get a dashboard; admins get full moderation +
 analytics. It is architected to scale toward large-marketplace traffic (à la
 unegui.mn), not as a throwaway MVP.
 
+> **This file is the single source of truth.** It is loaded automatically every
+> session, so read it first and keep it current — when something material changes
+> (versions, DB host, a new gotcha, a decision), update the relevant section here.
+
+---
+
+## Current state (updated 2026-06-16)
+
+**Status:** builds clean and runs end-to-end. `tsc --noEmit` = 0 errors · `next build`
+succeeds · all pages + APIs return 200 (verified). Repo:
+https://github.com/janubis/sharnom.mn (branch `main`).
+
+**Toolchain:** Node **24.17.0 LTS** · npm **11.17.0** · Next **16.2.9** ·
+next-intl **4.x** · React 19 · TypeScript 5.7.
+
+**Database — PostgreSQL + PostGIS:**
+- *Local (current default):* native **PostgreSQL 18.4** at `C:\Program Files\PostgreSQL\18`,
+  superuser `postgres` / password `root`, DB `mongol_local`, port 5432. Extensions:
+  `postgis` 3.6.2, `pg_trgm`, `unaccent`. Schema migrated + seeded (36 businesses,
+  45 categories, 97 reviews). psql: `C:\Program Files\PostgreSQL\18\bin\psql.exe` with
+  `$env:PGPASSWORD="root"`.
+- *Supabase (target host — see below):* migration pending an IPv4 **Session-pooler**
+  connection string (this network has no IPv6; the direct `db.<ref>.supabase.co` host is
+  IPv6-only and unreachable here).
+
+**Services:** Redis / OpenSearch / ClickHouse / MinIO are optional and currently
+absent — the app degrades gracefully (cache + rate-limit fail open;
+`SEARCH_ENGINE=postgres`, `ANALYTICS_SINK=postgres`). Photo *upload* needs MinIO/S3 or
+Supabase Storage running.
+
+**Secrets** live in `.env.local` (gitignored): `DATABASE_URL`, `AUTH_SECRET`, OAuth keys,
+Supabase DB password, map/analytics keys. Never commit them. `.env.example` documents
+every variable.
+
+## Supabase project
+
+- Name **sharnom.mn** · ref **ptqjmvydciialkqdhwbj** · URL https://ptqjmvydciialkqdhwbj.supabase.co
+- Publishable (anon) key: `sb_publishable_OWsQjoRC4l9hz4Bxzv8xwA_s0gXPIGU` (client-safe to expose).
+- **DB password is in `.env.local`**, not here.
+- Direct host `db.ptqjmvydciialkqdhwbj.supabase.co:5432` is **IPv6-only** → unusable on
+  IPv4 networks. For migrations/seed/app use the **Session pooler** (Supabase dashboard →
+  Connect → Session pooler): host `aws-0-<region>.pooler.supabase.com`, user
+  `postgres.ptqjmvydciialkqdhwbj`, port `5432`.
+- **Migrate to Supabase:** enable `postgis`, `pg_trgm`, `unaccent` on the Supabase DB
+  (dashboard → Database → Extensions, or `create extension`), set `DATABASE_URL` to the
+  pooler string in `.env.local`, then `npm run db:push && npm run db:seed`. Auth.js + S3
+  storage stay as-is unless we decide to adopt Supabase Auth/Storage later.
+
+## Run locally
+
+```
+npm install                          # uses .npmrc (legacy-peer-deps) + package.json allowScripts
+npm run db:push && npm run db:seed   # if the DB is empty
+npm run dev                          # http://localhost:3000
+```
+Typecheck: `node node_modules/typescript/bin/tsc --noEmit` · Build: `npm run build`.
+
 ---
 
 ## Stack & the "why" behind each choice
@@ -81,8 +138,8 @@ simple and scales without rewrites:
      `scripts/_shared.ts` (before `@/db`). Don't move it, or scripts fall back to the
      default `mongol:mongol` DSN and fail auth.
 3. **Typecheck command.** If `node_modules/.bin/tsc` is missing, run
-   `node node_modules/typescript/bin/tsc --noEmit`. Lint:
-   `node node_modules/next/dist/bin/next lint`.
+   `node node_modules/typescript/bin/tsc --noEmit`. (`next lint` was removed in Next 16 —
+   use the ESLint CLI for linting.)
 4. **Workspace root.** `outputFileTracingRoot` is pinned in `next.config.mjs` because a
    stray lockfile elsewhere on disk can make Next infer the wrong root.
 5. **Ports.** MinIO's S3 API is on host **9100** (ClickHouse native uses 9000); MinIO
@@ -138,7 +195,32 @@ lint. See git history and `README.md` for the full architecture.
 
 ## Verification status
 
-- ✅ `tsc --noEmit` — 0 errors across ~216 source files.
-- ✅ `next lint` — no errors (a few benign unused-var warnings remain in canonical files).
-- ⚠️ DB-backed verification (`db:push`, `db:seed`, full `next build`, runtime) requires a
-  running Postgres/PostGIS — bring up `docker compose` to exercise it end-to-end.
+- ✅ `tsc --noEmit` — 0 errors.
+- ✅ `next build` — succeeds (Turbopack; 69/69 static pages generated against the live DB).
+- ✅ Runtime — home, search, business detail, category/district, login, owner, and `/api/*`
+  all return 200; `/admin` → 307 (auth middleware); PostGIS geo features work.
+
+## Decision log
+
+- **2026-06-14/15** Initial build: foundation authored by hand, feature surface via a
+  resumable multi-agent workflow (finished across session-limit resumes), driven to 0 TS errors.
+- **2026-06-15** Pushed to GitHub `janubis/sharnom.mn`. Wrote full README + this file.
+- **2026-06-15** Fixed client/server bundling leaks (nodemailer→fs): split pure helpers
+  into `@/lib/roles` + `@/lib/upload` (gotcha 7).
+- **2026-06-16** Local DB stood up: native PostgreSQL 18 + PostGIS 3.6.2 (installed via the
+  OSGeo bundle), schema migrated + seeded; app verified end-to-end.
+- **2026-06-16** Fixed "infer relation reviews.photos" by adding all inverse Drizzle
+  relations (gotcha 8).
+- **2026-06-16** Upgraded Next 15→**16** (+ next-intl 4, middleware fn export,
+  `force-dynamic` autocomplete, `.npmrc`), Node 22→**24.17 LTS**, npm→**11.17**
+  (+ `allowScripts`). All verified.
+- **2026-06-16** Stack-alignment review vs a Supabase/Vercel recommendation. Decisions:
+  adopt **Supabase Postgres** (DB only; keep Auth.js + S3); **MapLibre + hosted tiles**
+  (MapTiler); keep **pg_trgm** search for MVP; prep Vercel Analytics + Sentry + GA4 +
+  `vercel.json` (inert until accounts connected). Supabase DB migration pending the IPv4
+  pooler string.
+
+**Pending / next steps:**
+1. Supabase DB migration — needs the Session-pooler connection string (IPv4).
+2. Add a MapTiler key (`NEXT_PUBLIC_MAP_STYLE_URL`) for production map tiles.
+3. Connect Vercel + Cloudflare + Sentry + GA4 accounts when deploying.

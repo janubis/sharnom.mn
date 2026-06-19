@@ -2,10 +2,14 @@ import type { Metadata, Viewport } from "next";
 import { Noto_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
+import { Analytics } from "@vercel/analytics/next";
 
 import { Providers } from "@/components/providers";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { absoluteUrl } from "@/lib/utils";
 import "./globals.css";
+
+const gaId = process.env.NEXT_PUBLIC_GA_ID;
 
 const notoSans = Noto_Sans({
   subsets: ["latin", "cyrillic"],
@@ -55,6 +59,8 @@ export default async function RootLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>{children}</Providers>
         </NextIntlClientProvider>
+        <Analytics />
+        {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
       </body>
     </html>
   );
