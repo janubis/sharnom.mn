@@ -116,7 +116,13 @@ simple and scales without rewrites:
    Next ≤15 but works on 16 — `.npmrc` sets `legacy-peer-deps=true` so installs resolve.
    (e) `next lint` was removed; lint via the ESLint CLI.
 
-**Toolchain:** Node.js **24.16.0 LTS**, npm 11, Next **16.2.9**, next-intl **4.x**.
+10. **npm ≥ 11.17 blocks install scripts by default.** A fresh `npm install` skips the
+    `sharp` / `esbuild` / `unrs-resolver` install scripts (native binaries) unless they're
+    allowlisted. We pin approvals in the **`allowScripts`** field of `package.json` (via
+    `npm approve-scripts`). Without it, a clean clone breaks `next/image` (sharp) and `tsx`
+    (esbuild). If a dep is added later, run `npm approve-scripts --allow-scripts-pending`.
+
+**Toolchain:** Node.js **24.17.0 LTS**, npm **11.17.0**, Next **16.2.9**, next-intl **4.x**.
 
 ---
 
